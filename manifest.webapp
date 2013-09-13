@@ -1,0 +1,39 @@
+{
+    "version": "0.1",
+    "name": "Analysis For Organisation units",
+    "description": "Charts, Maps and Tables Analysis",
+    "launch_path": "/index.html",
+    "icons": {
+        "16": "/img/icons/mortar-16.png",
+        "48": "/img/icons/mortar-48.png",
+        "128": "/img/icons/mortar-128.png"
+    },
+    "developer": {
+        "name": "Namrata Nehete Purkayastha",
+        "url": "http://sunnam.us"
+    },
+    "installs_allowed_from": ["*"],
+    "locales": {
+        "es": {
+            "description": "Importar datos desde Excel",
+            "developer": {
+                "url": "http://dhis2.org/appmarket/analysisForOrgUnit"
+            }
+        },
+        "it": {
+            "description": "Importazione di dati da Excel",
+            "developer": {
+                "url": "http://dhis2.org/appmarket/analysisForOrgUnit"
+            }
+        }
+    },
+    "default_locale": "en",
+    "permissions": {
+        "systemXHR": {}
+    },
+    "activities": {
+      "dhis": {
+        "href": "*"
+      }
+    }
+}

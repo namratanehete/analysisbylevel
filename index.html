@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>DHIS2 App - Analysis For Organisation Units</title>
+        <meta name="description" content="Imports Users and Organization Unit from CSV">
+        
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+            .chart2 {width:450px; margin-bottom: 50px; height: 300px; border: 2px solid #d1d1d1; border-radius: 1px;}
+            
+            #messageDiv{
+                color: red;
+            }
+            
+            #analysisDiv{
+                width: 100%;
+                -moz-column-count:  2;
+                -moz-column-width:  400px;
+                -webkit-column-width:  400px;
+                column-count-width:  400px; 
+
+                -moz-column-gap: 2px;
+                -webkit-column-gap: 2px;
+                column-gap: 2px;
+
+                column-rule: 1px solid #e1e1e1;
+                display: inline-block;
+            }
+            
+        </style>
+
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/ext-plugin-gray.css" />
+        <script src="js/vendor/jquery-1.9.1.min.js"></script>
+        <script src="js/vendor/bootstrap.min.js"></script>
+        <script src="js/libs/datatables-1.9.4/jquery.dataTables.min.js"></script>
+        <script src="js/libs/jquery.csv-0.71.min.js"></script>
+        <script src="js/libs/jquery.blockUI.js"></script>
+        <script src="js/libs/es5-shim.min.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/utils.js"></script>
+        <script src="js/libs/ext-all.js"></script>
+        <script src="js/core.js"></script>
+        <script src="js/plugin.js"></script>
+        <script src="js/testData.js"></script>
+        
+
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="index.html">DHIS2 App - Analysis For Organisation Units</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav pull-right">
+                            <li><a href="#about">About</a></li>
+                            <li class="pull-right"><a id="btnExit" href="">Exit</a></li>
+                        </ul>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+
+        <div class="container" style="width:98%;">
+            <div id="messageDiv"></div>
+            <hr>
+            <table border="0">
+                    <tr>
+                        <td>Indicators</td>
+                        <td>
+                            <select id="indicators" onchange="doValidation()">
+                                <option value="Select">Select</option>
+                            </select>
+                        </td>
+                        <td>Periods</td>
+                        <td>
+                            <select id="periods" onchange="doValidation()">
+                                <option value="LAST_WEEK">Last week</option>
+                                <option value="LAST_4_WEEKS">Last 4 weeks</option>
+                                <option value="LAST_12_WEEKS">Last 12 weeks</option>
+                                <option value="LAST_MONTH">Last month</option>
+                                <option value="LAST_3_MONTHS">Last 3 months</option>
+                                <option value="LAST_12_MONTHS">Last 12 months</option>
+                                <option value="LAST_BIMONTH">Last bi-month</option>
+                                <option value="LAST_6_BIMONTHS">Last 6 bi-months</option>
+                                <option value="LAST_QUARTER">Last quarter</option>
+                                <option value="LAST_4_QUARTERS">Last 4 quarters</option>
+                                <option value="LAST_SIX_MONTH">Last six-month</option>
+                                <option value="LAST_2_SIXMONTHS">Last 2 six-months</option>
+                                <option value="LAST_FINANCIAL_YEAR">Last financial year</option>
+                                <option value="LAST_5_FINANCIAL_YEARS">Last 5 financial years</option>
+                                <option value="THIS_YEAR">This year</option>
+                                <option value="LAST_YEAR">Last year</option>
+                                <option value="LAST_5_YEARS">Last 5 years</option>
+                            </select>
+                        </td>
+                        <td>Chart<input type="checkbox" onclick="doValidation()" name="analysisType" checked value="Chart"/></td>
+                        <td>Table<input type="checkbox" onclick="doValidation()" name="analysisType" value="Table" /></td>
+                    </tr>
+             </table>
+            
+             <div id="analysisDiv">
+                 <div id="chartDiv"></div>
+                 <div id="tableDiv"></div>
+             </div>            
+            <br/>
+           
+
+            
+            <footer>
+                <p>&copy; Namrata Nehete Purkayastha, 2013</p>
+            </footer>
+
+        </div> <!-- /container -->
+
+        <div id="unauthenticatedMessage" style="display:none;"> 
+            <h1>Unathenticated access. Please login to DHIS2.</h1> 
+        </div> 
+        <div id="failureMessage" style="display:none;"> 
+            <h1>Could not reach DHIS2 instance. Please verify all settings.</h1> 
+        </div>
+    </body>
+</html>
