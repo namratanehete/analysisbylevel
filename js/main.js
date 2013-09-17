@@ -5,6 +5,7 @@ var orgUnitData = new Object();
 var dataElementGroupData = new Object();
 var indicatorsData = new Object();
 var orgUnitLevels = new Array();
+var chartArr = new Array();
 var parentUserOrgId;
 var displayOrgUnits = [];
 
@@ -187,7 +188,7 @@ function getParentOrgUnitById(uid){
 function goDown(uid){
     
     searchOrgUnitByParent(uid);
-    showTable();
+    doValidation();
 }
 
 function goUp(uid){
@@ -233,32 +234,6 @@ function setDataIndropdown(data,dropdownName){
     });
 }
 
-/**
- * post bulk data values using DHIS web API into DHIS table.
- * @returns {undefined} */
-function postBulkDataValues(dataXML){
-    var dfr = $.Deferred();
-    $.ajax({
-        url: serverUrl + '/api/dataValueSets',
-        headers: {
-            'Content-Type': 'application/xml',
-            'Accept' : 'application/xml'
-        },
-        type: "POST",
-        cache: false,
-        crossDomain: true,
-        data: dataXML,
-        xhrFields: {
-            withCredentials: true
-        },
-        success: function(data) {
-            console.log(data.documentElement.childNodes[1].childNodes[0].nodeValue);
-            alert(data.documentElement.childNodes[1].childNodes[0].nodeValue);
-        }
-    });
-    return dfr.promise();
-}
-
 function corsSetup() {
     $.ajaxSetup({
         headers: {
@@ -293,83 +268,172 @@ function doValidation(){
         doAnalysis(indicatorId,periodId);
     else
     {
-        $('#chartDiv').empty();
-        $('#tableDiv').empty();
+        $('#analysisDiv').empty();
     }    
 }
 
 function doAnalysis(indicatorId,periodId){
+    $('#analysisDiv').empty();
+    chartArr = new Array();
+    $.each(displayOrgUnits, function(ouIndex,ou ) { 
+        getDataFromDhis(indicatorId,periodId,ou,ouIndex);
+    });
     
-    $('#chartDiv').empty();
-    $('#tableDiv').empty();
-    $("input[name=analysisType]:checked").each(function() {
-        if($(this).val() == 'Chart') {
-            addCharts(indicatorId,periodId);
-        }
-        if($(this).val() == 'Table') {
-            drawTable(jsonData, indicatorId)
-        }
-     });
+    changeChartProperties();
 }
 
+function createChartAndTable(jsonData,indicatorId,periodId,ou,ouIndex){
+    console.log('ou '+ou.name + ' periodId '+periodId +' indicatiorId '+indicatorId);
+    console.log('jsonData '+jsonData);
+    if(jsonData)
+    {
+        var data = jsonToD3ChartJson(jsonData, indicatorId);
+        console.log("Chnaged json "+JSON.stringify(data));
+        
+        $("input[name=analysisType]:checked").each(function() {
+            if($(this).val() == 'Chart') {
+                addCharts(data, ou, ouIndex);
+            }
+            if($(this).val() == 'Table') {
+                drawTable(data, ouIndex);
+            }
+        });
+        
+    }
+}
+
+//http://localhost:8080/dhis/api/analytics.json?dimension=dx:Uvn6LCg7dVU&dimension=pe:LAST_12_MONTHS&filter=ou:O6uvpzGd5pu
+/**
+ * Get data for chart and table using DHIS web API.
+ * */
+function getDataFromDhis(indicatorId,periodId,ou,ouIndex) {
+    var result;
+    $.ajax({
+        url: serverUrl + '/api/analytics.json?dimension=dx:' + indicatorId + '&dimension=pe:' +periodId+ '&filter=ou:' +ou.id,
+        headers: {
+            'Accept': 'application/json'
+        },
+        type: "GET",
+        cache: false,
+        crossDomain: true,
+        xhrFields: {
+            withCredentials: true
+        }
+    }).done(function(data, textStatus, jqXHR) {
+        if (jqXHR.getResponseHeader('Login-Page') == 'true') {
+            $.blockUI({message: $('#unauthenticatedMessage')});
+        } else {
+            createChartAndTable(data,indicatorId,periodId,ou,ouIndex);
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        $.blockUI({message: $('#failureMessage')});
+    });
+    console.log('result '+result);
+    return result;
+}
+
+function changeChartProperties(){
+    console.log("Inside changeChartProperties()");
+    var xTicks = d3.selectAll('.nv-groups > g').selectAll('g');
+        xTicks.selectAll('text')
+        .style("font","10px sans-serif");
+
+    //chart.xAxis.rotateLabels(45);
+    var xTicks = d3.selectAll('.nv-x.nv-axis > g').selectAll('g');
+     xTicks.selectAll('text')
+    .attr('transform', function(d,i,j) { return 'translate (-20, 40) rotate(-55 0,0)' });
+
+    
+    $.each(chartArr, function(index,chart )
+    {
+        nv.utils.windowResize(chart.update);
+    });
+}
 /**
  * Add charts Dynamicaly.
  * @param {String} indicatorId
  * @param {String} parentId
  */
-function addCharts(indicatorId, periodId){
-    $('#chartDiv').empty();
-    $(displayOrgUnits).each(function()
+function addCharts(data, ou, index){
+    var divData = '<div style="border-style:solid;float:left;display:inline-block;width:560px;margin:5px;">';
+    divData += '<table id="chart_'+index+'" width="100%"><tr><td width="20px">';
+    
+    if(displayOrgUnits.length > 1)
+        divData += '<a href=# onclick="goUp(\''+ou.id+'\')"><img border="0" title="↑" src="./img/move_up.png"></a>';
+    
+    divData += '</td><td style="padding-top: 6px;">';
+    
+    if(ou.level != orgUnitLevels.organisationUnitLevels.length)
+        divData += '<a href=# onclick="goDown(\''+ou.id+'\')"><img border="0" title="↑" src="./img/move_down.png"></a>';
+    
+    divData += '</td>';
+    
+    if(data)
     {
-        var divData = '<div>';
+        divData += '<td style="text-align:center;">'+ou.name +' - '+data.key+'</td></tr><tr>';
+        divData += '<td colspan="3"><svg></svg>';
+        divData += '</td></tr></table></div>';
 
-        if(displayOrgUnits.length > 1)
-            divData += '<a href=# onclick="goUp(\''+this.id+'\')"><img border="0" title="↑" src="./img/move_up.png"></a>';
+        $('#analysisDiv').append(divData);
 
-        if(this.level != orgUnitLevels.organisationUnitLevels.length)
-            divData += '<a href=# onclick="goDown(\''+this.id+'\')"><img border="0" title="↑" src="./img/move_down.png"></a>';
-        divData += '<div id=\''+this.id+'\' class=\'chart2\'></div></div>';
-        
-        $('#chartDiv').append(divData);
-        getCharts(indicatorId, periodId, this.id, this.id);
-    });
-}
+        chartArr[index] = nv.models.discreteBarChart()
+            .x(function(d) { return d.label })
+            .y(function(d) { return d.value })
+            .staggerLabels(true)
+            .tooltips(false)
+            .showValues(true)
 
-function getCharts(indicatorId, periodId, ouId, element) {
-    console.log('indicatorId, periodId, ouId, element '+indicatorId+' '+ periodId+' '+ ouId+' '+ element);
-    DV.plugin.getChart({
-        url: serverUrl+'/',
-        el: element,
-        type: 'column',
-        columns: [
-            {dimension: 'de', items: [{id: indicatorId}]}
-        ],
-        rows: [
-            {dimension: 'pe', items: [{id: periodId}]}
-        ],
-        filters: [
-            {dimension: 'ou', items: [{id: ouId}]}
-        ],
-        showData: true,
-        targetLineValue: 70
-    });
-}
+        chartArr[index].margin({bottom: 100});
 
-function drawTable(jsonData, indicatorId){
-    $('#tableDiv').empty();
-    if(jsonData.rows.length > 0)
-    {
-        var table = '<table border="1">';
-        table += '<tr><td>'+jsonData.metaData.names.pe+'</td><td>'+jsonData.metaData.names[indicatorId]+'</td></tr>';
-        $.each(jsonData.rows, function(rowIndex,rowObj ) {
-            table += '<tr><td>'+jsonData.metaData.names[rowObj[1]]+'</td><td>'+rowObj[2]+'</td></tr>';
-        });
+        d3.select('#chart_'+index+' svg')
+            .datum(data)
+          .transition().duration(500)
+          .call(chartArr[index]);
 
-        table += '</table>';
-        console.log('table = '+table);
-        $('#tableDiv').append(table);
+        d3.selectAll("rect")
+          .style("fill","blue");
+
+        nv.utils.windowResize(chartArr[index].update);
     }
     else
-    $('#messageDiv').append('No data found.');
+    {
+       divData += '<td>No Data Found for '+ou.name+'</td></tr></table>';
+       $('#analysisDiv').append(divData);
+    }
+    
 }
 
+function drawTable(data, index){
+    if(data[0].values.length > 0)
+    {
+        var table = '<div id="table_'+index+'"><table border="1">';
+        table += '<tr><td>Period</td><td>'+data[0].key+'</td></tr>';
+        $.each(data[0].values, function(valIndex,valueObj ) {
+            table += '<tr><td>'+valueObj.label+'</td><td>'+valueObj.value+'</td></tr>';
+        });
+
+        table += '</table></div>';
+        $('#analysisDiv').append(table);
+    }
+    else
+    $('#analysisDiv').append('No data found.');
+}
+
+function jsonToD3ChartJson(jsonData, indicatorId){
+    var data;
+    if(jsonData.rows.length > 0)
+    {
+        data = [{ 
+            key :  jsonData.metaData.names[indicatorId],
+            values : []
+        }];
+
+        $.each(jsonData.rows, function(rowIndex,rowObj ) {
+            var valuesData = {};
+            valuesData["label"] = jsonData.metaData.names[rowObj[1]];
+            valuesData["value"] = parseInt(rowObj[2]);
+            data[0].values.push(valuesData);
+        });
+    }
+    return data;
+}

@@ -15,7 +15,6 @@
                 padding-top: 60px;
                 padding-bottom: 40px;
             }
-            .chart2 {width:450px; margin-bottom: 50px; height: 300px; border: 2px solid #d1d1d1; border-radius: 1px;}
             
             #messageDiv{
                 color: red;
@@ -23,23 +22,17 @@
             
             #analysisDiv{
                 width: 100%;
-                -moz-column-count:  2;
-                -moz-column-width:  400px;
-                -webkit-column-width:  400px;
-                column-count-width:  400px; 
-
-                -moz-column-gap: 2px;
-                -webkit-column-gap: 2px;
-                column-gap: 2px;
-
-                column-rule: 1px solid #e1e1e1;
-                display: inline-block;
+                
+                display: block;
+            }
+            
+            #analysisDiv svg {
+               min-height: 300px;
             }
             
         </style>
 
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
-        <link rel="stylesheet" type="text/css" href="css/ext-plugin-gray.css" />
         <script src="js/vendor/jquery-1.9.1.min.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
         <script src="js/libs/datatables-1.9.4/jquery.dataTables.min.js"></script>
@@ -47,15 +40,19 @@
         <script src="js/libs/jquery.blockUI.js"></script>
         <script src="js/libs/es5-shim.min.js"></script>
         <script src="js/main.js"></script>
-        <script src="js/utils.js"></script>
         <script src="js/libs/ext-all.js"></script>
         <script src="js/core.js"></script>
         <script src="js/plugin.js"></script>
         <script src="js/testData.js"></script>
         
-
+        <link rel="stylesheet" href="http://nvd3.org/css/common.css">
+        <link rel="stylesheet" href="http://nvd3.org/src/nv.d3.css">
+        <link rel="stylesheet" href="http://nvd3.org/css/syntax.css">
+        <script src="http://nvd3.org/lib/d3.v2.js"></script>
+        <script src="http://nvd3.org/lib/fisheye.js"></script>
+        <script src="http://nvd3.org/nv.d3.js"></script>
     </head>
-    <body>
+    <body onresize="changeChartProperties()">
         <!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
@@ -118,19 +115,15 @@
              </table>
             
              <div id="analysisDiv">
-                 <div id="chartDiv"></div>
-                 <div id="tableDiv"></div>
+                 
              </div>            
             <br/>
-           
-
-            
-            <footer>
-                <p>&copy; Namrata Nehete Purkayastha, 2013</p>
-            </footer>
-
         </div> <!-- /container -->
-
+        
+        <footer>
+            <p>&copy; Namrata Nehete Purkayastha, 2013</p>
+        </footer>
+        
         <div id="unauthenticatedMessage" style="display:none;"> 
             <h1>Unathenticated access. Please login to DHIS2.</h1> 
         </div> 
