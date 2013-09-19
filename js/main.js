@@ -238,6 +238,7 @@ function goUp(uid){
  * @param {string} dropdownName
  */
 function setDataIndropdown(data,dropdownName){
+    sortJson(data,"name");
     $(data).each(function()
     {
         var option = $('<option />');
