@@ -27,9 +27,12 @@
             }
             
             #analysisDiv svg {
-               min-height: 300px;
+                min-height: 300px;
             }
             
+            .tick:not(.zero) {
+                opacity: 0;
+            }
         </style>
 
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
@@ -40,9 +43,6 @@
         <script src="js/libs/jquery.blockUI.js"></script>
         <script src="js/libs/es5-shim.min.js"></script>
         <script src="js/main.js"></script>
-        <script src="js/libs/ext-all.js"></script>
-        <script src="js/core.js"></script>
-        <script src="js/plugin.js"></script>
         <script src="js/testData.js"></script>
         
         <link rel="stylesheet" href="http://nvd3.org/css/common.css">
@@ -52,12 +52,8 @@
         <script src="http://nvd3.org/lib/fisheye.js"></script>
         <script src="http://nvd3.org/nv.d3.js"></script>
     </head>
-    <body onresize="changeChartProperties()">
-        <!--[if lt IE 7]>
-            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
-        <![endif]-->
-
-        <div class="navbar navbar-inverse navbar-fixed-top">
+    <body>
+         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
                     <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -81,13 +77,20 @@
             <hr>
             <table border="0">
                     <tr>
-                        <td>Indicators</td>
+                        <td>Indicators:</td>
                         <td>
                             <select id="indicators" onchange="doValidation()">
                                 <option value="Select">Select</option>
                             </select>
                         </td>
-                        <td>Periods</td>
+                        <td>DataElements:</td>
+                        <td>
+                            <select id="dataElementsGroups" onchange="doValidation()">
+                                <option value="Select">Select</option>
+                            </select>
+                        </td>
+                        
+                        <td>Periods:</td>
                         <td>
                             <select id="periods" onchange="doValidation()">
                                 <option value="LAST_WEEK">Last week</option>
