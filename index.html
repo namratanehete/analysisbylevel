@@ -33,6 +33,17 @@
             .tick:not(.zero) {
                 opacity: 0;
             }
+            
+            .message { padding:10px; margin:15px 0; display:block; text-align:left; }
+            .message-title { font-weight:bold; font-size:1.25em; }
+            .message-body { margin-top:4px; }
+            .error, .notice, .success {padding:.8em;margin-bottom:1em;border:2px solid #ddd;}
+            .error {background:#FBE3E4;color:#8a1f11;border-color:#FBC2C4;}
+            .notice {background:#FFF6BF;color:#514721;border-color:#FFD324;}
+            .success {background:#E6EFC2;color:#264409;border-color:#C6D880;}
+            .error a {color:#8a1f11;}
+            .notice a {color:#514721;}
+            .success a {color:#264409;} 
         </style>
 
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
@@ -44,13 +55,21 @@
         <script src="js/libs/es5-shim.min.js"></script>
         <script src="js/main.js"></script>
         <script src="js/testData.js"></script>
+        <script src="js/graphs.js"></script>
+        <script src="js/orgUnit.js"></script>
+        <script src="js/vendor/highcharts/highcharts.js"></script>
+        <script src="js/vendor/highcharts/exporting.js"></script>
         
-        <link rel="stylesheet" href="http://nvd3.org/css/common.css">
-        <link rel="stylesheet" href="http://nvd3.org/src/nv.d3.css">
-        <link rel="stylesheet" href="http://nvd3.org/css/syntax.css">
-        <script src="http://nvd3.org/lib/d3.v2.js"></script>
-        <script src="http://nvd3.org/lib/fisheye.js"></script>
-        <script src="http://nvd3.org/nv.d3.js"></script>
+        <link rel="stylesheet" href="css/jquery-ui.css">
+        <link rel="stylesheet" href="css/jquery.multiselect.css">
+        <script src="js/vendor/jquery-ui.min.js"></script>
+        <script src="js/libs/jquery.multiselect.min.js"></script>
+        <script>
+            
+            
+        </script>
+        
+        
     </head>
     <body>
          <div class="navbar navbar-inverse navbar-fixed-top">
@@ -73,26 +92,27 @@
         </div>
 
         <div class="container" style="width:98%;">
-            <div id="messageDiv"></div>
-            <hr>
-            <table border="0">
+            <table border="0" cellspacing="10" cellpadding="5">
                     <tr>
-                        <td>Indicators:</td>
+                        <td>Indicator:</td>
                         <td>
-                            <select id="indicators" onchange="doValidation()">
+                            <select id="indicators">
                                 <option value="Select">Select</option>
                             </select>
                         </td>
-                        <td>DataElements:</td>
+                        <td>DataElement Group:</td>
                         <td>
-                            <select id="dataElementsGroups" onchange="doValidation()">
+                            <select id="dataElementGroups" onchange="getDataElements()">
                                 <option value="Select">Select</option>
                             </select>
                         </td>
-                        
-                        <td>Periods:</td>
                         <td>
-                            <select id="periods" onchange="doValidation()">
+                            <select multiple id="dataElements" style="display: none;">
+                            </select>
+                        </td>
+                        <td>Period:</td>
+                        <td>
+                            <select id="periods">
                                 <option value="LAST_WEEK">Last week</option>
                                 <option value="LAST_4_WEEKS">Last 4 weeks</option>
                                 <option value="LAST_12_WEEKS">Last 12 weeks</option>
@@ -112,11 +132,13 @@
                                 <option value="LAST_5_YEARS">Last 5 years</option>
                             </select>
                         </td>
-                        <td>Chart<input type="checkbox" onclick="doValidation()" name="analysisType" checked value="Chart"/></td>
-                        <td>Table<input type="checkbox" onclick="doValidation()" name="analysisType" value="Table" /></td>
+                        <td>Chart <input type="checkbox" name="analysisType" checked value="Chart"/></td>
+                        <td>Table <input type="checkbox" name="analysisType" value="Table" /></td>
+                        <td><input type="button" onclick="doValidation()" value="Show Analysis"/></td>
                     </tr>
              </table>
-            
+             <hr>
+             <p style="display:none;" class="message"></p>
              <div id="analysisDiv">
                  
              </div>            
