@@ -69,8 +69,7 @@ function getXAxisCategories(jsonData){
 function convertDHISJsonToChartJson(jsonData, dxParams) {
     var data = [];
     jsonData.metaData.pe.sort();
-    console.log('jsonData '+JSON.stringify(jsonData.rows));
-    console.log(JSON.stringify(dataElementData));
+   // console.log('jsonData '+JSON.stringify(jsonData.rows));
     $.each(dxParams, function(index, param) {
         if ($('#indicators :selected').val() == param)
         {
@@ -90,7 +89,45 @@ function convertDHISJsonToChartJson(jsonData, dxParams) {
             data.push(item);
         }
     });
-    console.log('data '+JSON.stringify(data));
+    //console.log('data '+JSON.stringify(data));
+    return data;
+}
+
+function convertJsonToTableJson(jsonData, params){
+    jsonData.metaData.pe.sort();
+    var data = [];
+    console.log('jsonData '+JSON.stringify(jsonData.rows));
+    $.each(jsonData.metaData.pe, function(peIndex, peObj) {
+        item = {};
+        item ["period"] = jsonData.metaData.names[peObj];
+        item ["keys"] = [];
+        item ["values"] = [];
+        
+        var keyData = [];
+        var valueData = [];
+
+        $.each(jsonData.rows, function(rowIndex, rowObj) {
+            if(rowObj[1] == peObj)
+            {
+                if(rowObj[0] && keyData.indexOf(rowObj[0]) == -1)
+                {
+                    keyData[keyData.length] = rowObj[0];
+                    valueData[valueData.length] = rowObj[2];
+                }
+            }
+        });
+        $.each(params, function (ind,param){
+            var index = keyData.indexOf(param.toString());
+            //console.log('index of param '+param + ' is '+index);
+            item.keys.push(jsonData.metaData.names[param]);
+            if (index == -1)
+                item.values.push(0);
+            else
+                item.values.push(parseFloat(valueData[index]));
+        });
+        data.push(item);
+    });
+
     return data;
 }
 
@@ -104,7 +141,6 @@ function getDataToDisplayInGraph(jsonData, id)
                 periodData[rowIndex] = rowObj[1];
         });
         
-        rowDataStr = JSON.stringify(jsonData.rows);
         $.each(jsonData.metaData.pe, function(peIndex, peObj) {
             var index = periodData.indexOf(peObj);
             if (index == -1)
@@ -115,7 +151,7 @@ function getDataToDisplayInGraph(jsonData, id)
    return data;
 }
 
-function addCharts(data, ou, index, jsonData) {
+function addCharts(data, ou, index, categories) {
 
     var divData = '';
 
@@ -129,6 +165,6 @@ function addCharts(data, ou, index, jsonData) {
     $('#chart_' + index).append(divData);
     
     var divName = $('.chart_' + index);   
-    createHighChart(divName,ou.name,data,getXAxisCategories(jsonData));
+    createHighChart(divName,ou.name,data,categories);
 }
 

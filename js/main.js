@@ -262,7 +262,7 @@ function getDataFromDhis(dxParams, periodId) {
             if (index != (dxParams.length - 1))
                 dx += ';';
         });
-        
+
         $.ajax({
             url: serverUrl + '/api/analytics.json?dimension=dx:' + dx + '&dimension=pe:' + periodId + '&filter=ou:' + ou.id,
             headers: {
@@ -305,36 +305,46 @@ function createChartAndTable(jsonData, dxParams, periodId, ou, ouIndex) {
     {
         var data = convertDHISJsonToChartJson(jsonData, dxParams);
         dataArr[ouIndex] = data;
+        var categories = getXAxisCategories(jsonData);
         $("input[name=analysisType]:checked").each(function() {
             if ($(this).val() == 'Chart') {
-                addCharts(data, ou, ouIndex, jsonData);
+                addCharts(data, ou, ouIndex, categories);
             }
             if ($(this).val() == 'Table') {
-                drawTable(data, ou, ouIndex);
+                var tableData = convertJsonToTableJson(jsonData, dxParams);
+                drawTable(tableData, ou, ouIndex, categories);
             }
         });
     }
 }
 
 
-function drawTable(data, ou, index) {
+function drawTable(data, ou, index, categories) {
 
     var table = '<table border="1" style="margin:5px;font: 11px sans-serif;">';
-    table += '<tr><td style="text-align:center;font-weight: bold;" colspan="2">' + ou.name + '</td></tr>';
+    table += '<tr><td style="text-align:center;font-weight: bold;" colspan="2">'+ou.name+'</td></tr>';
     table += '<tr><td style="text-align:center;">';
-    if (displayOrgUnits.length > 1)
-        table += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
+    if(displayOrgUnits.length > 1)
+        table += '<a href=# onclick="goUp(\''+ou.id+'\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
 
-    if (searchOrgUnitByParent(ou.id).length > 0)
-        table += '<a href=# onclick="goDown(\'' + ou.id + '\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a></div>';
+    if(searchOrgUnitByParent(ou.id).length > 0 )
+        table += '<a href=# onclick="goDown(\''+ou.id+'\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a></div>';
 
     table += '</td>';
-    table += '<td>' + data[0].key + '</td></tr>';
-    $.each(data[0].values, function(valIndex, valueObj) {
-        table += '<tr><td style="padding:2px;" colspan="1">' + valueObj.label + '</td><td style="padding: 2px; text-align: right;">' + valueObj.value + '</td></tr>';
+    $.each(data[0].keys,function(){
+        table += '<td>'+this+'</td>';
+    });
+     
+    table += '</tr>';
+    $.each(data, function(valIndex,dataObj ) {
+        table += '<tr><td style="padding:2px;" colspan="1">'+dataObj.period+'</td>';
+        $.each(dataObj.values, function(valIndex,value ) {
+              table += '<td style="padding: 2px; text-align: right;">'+value+'</td>';
+        });
+         table += '</tr>';
     });
 
     table += '</table>';
-    $('#table_' + index).append(table);
+    $('#table_'+index).append(table);
 }
 
