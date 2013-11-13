@@ -109,6 +109,7 @@ function setData(metaDataType, dataStr) {
     {
         indicatorsData = dataStr;
         setDataInDropdown(indicatorsData.indicators, metaDataType);
+        showMultiSelectDropdown($("#indicators"),"Choose Indicators!", "You can select maximum four Indicators!");
         //console.log("indicators = "+indicatorsData.indicators.length);
     }
     else if (metaDataType == 'dataElementGroups')
@@ -146,7 +147,8 @@ function getDataElements() {
                 dataElementData = data.dataElements;
                 $("#dataElements").empty();
                 setDataInDropdown(dataElementData, 'dataElements');
-                showMultiSelectDropdown();
+                var className = $("#dataElements");
+                showMultiSelectDropdown($("#dataElements"),"Choose DataElements!", "You can select maximum four data elements!");
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             $.blockUI({message: $('#failureMessage')});
@@ -159,23 +161,24 @@ function getDataElements() {
     }
 }
 
-function showMultiSelectDropdown() {
+function showMultiSelectDropdown(className,header, warningMsg) {
 
-    $("#dataElements").multiselect({
-        header: "Choose DataElements!",
+    className.multiselect({
+        header: header,
         click: function(e) {
-            if ($(this).multiselect("widget").find("input:checked").length > 2) {
-                showWarning("You can select only two data elements!", 2000);
+            if ($(this).multiselect("widget").find("input:checked").length > 4) {
+                showWarning(warningMsg, 2000);
                 return false;
             }
         }
     });
-    $("#dataElements").multiselect('refresh');
+    className.multiselect('refresh');
 }
 
 function showWarning(msg, timeoutSeconds) {
     var warning = $(".message");
     warning.css("display", "block");
+    warning.css("text-align", "right");
     warning.addClass("error").removeClass("success").html(msg);
     setTimeout(function() {
         warning.fadeOut("slow", function() {
@@ -212,18 +215,19 @@ function setDataInDropdown(data, dropdownName) {
 
 function doValidation() {
 
-    var indicatorId = $('#indicators :selected').val();
+    var indicators = $('#indicators').val();
     var dataElements = $('#dataElements').val();
     var periodId = $('#periods :selected').val();
     var valid = true;
-    if (indicatorId == 'Select' && !dataElements)
+    if (!indicators && !dataElements)
     {
-        showWarning('Please Select Indicator or DataElements.', 2000);
+        showWarning('Please Select Indicator and/or DataElements.', 2000);
         valid = false;
     }
     else
     {
-        if ($("input:checked").length == 0)
+        console.log($("input[name=analysisType]:checked").length);
+        if ($("input[name=analysisType]:checked").length == 0)
         {
             showWarning('Please Select Chart or Table Option.', 2000);
             valid = false;
@@ -233,11 +237,18 @@ function doValidation() {
     {
         var dxParams = [];
 
-        $.each(dataElements, function() {
-            dxParams.push(this);
-        });
-
-        (indicatorId != 'Select') ? dxParams.push(indicatorId) : '';
+        if (dataElements)
+        {
+            $.each(dataElements, function() {
+                dxParams.push(this);
+            });
+        }
+        if (indicators)
+        {
+            $.each(indicators, function() {
+                dxParams.push(this);
+            });
+        }
         getDataFromDhis(dxParams, periodId);
     }
     else
@@ -278,7 +289,7 @@ function getDataFromDhis(dxParams, periodId) {
             if (jqXHR.getResponseHeader('Login-Page') == 'true') {
                 $.blockUI({message: $('#unauthenticatedMessage')});
             } else {
-                createChartAndTable(data, dxParams, periodId, ou, ouIndex);
+                createChartAndTable(data, dxParams, ou, ouIndex);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             $.blockUI({message: $('#failureMessage')});
@@ -290,7 +301,7 @@ function createDivForChartAndTable(ouIndex) {
     var divData = '<div id="div_' + ouIndex + '" style="float:left;display:inline-block;">';
     $("input[name=analysisType]:checked").each(function() {
         if ($(this).val() == 'Chart') {
-            divData += '<div id="chart_' + ouIndex + '" style="border:1px solid;float:left;display:inline-block;width:500px;margin:5px;"></div>';
+            divData += '<div id="chart_' + ouIndex + '" style="border:1px solid;float:left;display:inline-block;width:650px;margin:5px;"></div>';
         }
         if ($(this).val() == 'Table') {
             divData += '<div id="table_' + ouIndex + '" style="float:left;display:inline-block;"></div>';
@@ -300,7 +311,7 @@ function createDivForChartAndTable(ouIndex) {
     $('#analysisDiv').append(divData);
 }
 
-function createChartAndTable(jsonData, dxParams, periodId, ou, ouIndex) {
+function createChartAndTable(jsonData, dxParams, ou, ouIndex) {
     if (jsonData)
     {
         var data = convertDHISJsonToChartJson(jsonData, dxParams);
@@ -321,30 +332,31 @@ function createChartAndTable(jsonData, dxParams, periodId, ou, ouIndex) {
 
 function drawTable(data, ou, index, categories) {
 
+    var totalTds = data[0].keys.length + 1;
     var table = '<table border="1" style="margin:5px;font: 11px sans-serif;">';
-    table += '<tr><td style="text-align:center;font-weight: bold;" colspan="2">'+ou.name+'</td></tr>';
+    table += '<tr><td style="text-align:center;font-weight: bold;" colspan="'+totalTds+'">' + ou.name + '</td></tr>';
     table += '<tr><td style="text-align:center;">';
-    if(displayOrgUnits.length > 1)
-        table += '<a href=# onclick="goUp(\''+ou.id+'\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
+    if (displayOrgUnits.length > 1)
+        table += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
 
-    if(searchOrgUnitByParent(ou.id).length > 0 )
-        table += '<a href=# onclick="goDown(\''+ou.id+'\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a></div>';
+    if (searchOrgUnitByParent(ou.id).length > 0)
+        table += '<a href=# onclick="goDown(\'' + ou.id + '\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a></div>';
 
     table += '</td>';
-    $.each(data[0].keys,function(){
-        table += '<td>'+this+'</td>';
+    $.each(data[0].keys, function() {
+        table += '<td>' + this + '</td>';
     });
-     
+
     table += '</tr>';
-    $.each(data, function(valIndex,dataObj ) {
-        table += '<tr><td style="padding:2px;" colspan="1">'+dataObj.period+'</td>';
-        $.each(dataObj.values, function(valIndex,value ) {
-              table += '<td style="padding: 2px; text-align: right;">'+value+'</td>';
+    $.each(data, function(valIndex, dataObj) {
+        table += '<tr><td style="padding:2px;" colspan="1">' + dataObj.period + '</td>';
+        $.each(dataObj.values, function(valIndex, value) {
+            table += '<td style="padding: 2px; text-align: right;">' + value + '</td>';
         });
-         table += '</tr>';
+        table += '</tr>';
     });
 
     table += '</table>';
-    $('#table_'+index).append(table);
+    $('#table_' + index).append(table);
 }
 

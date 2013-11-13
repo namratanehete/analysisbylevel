@@ -70,8 +70,9 @@ function convertDHISJsonToChartJson(jsonData, dxParams) {
     var data = [];
     jsonData.metaData.pe.sort();
    // console.log('jsonData '+JSON.stringify(jsonData.rows));
+   // console.log(JSON.stringify(dataElementData));
     $.each(dxParams, function(index, param) {
-        if ($('#indicators :selected').val() == param)
+        if ($('#indicators').val().indexOf(param.toString()) != -1)
         {
             item = {};
             item ["name"] = jsonData.metaData.names[param];
@@ -127,7 +128,7 @@ function convertJsonToTableJson(jsonData, params){
         });
         data.push(item);
     });
-
+    //console.log('data '+JSON.stringify(data));
     return data;
 }
 
