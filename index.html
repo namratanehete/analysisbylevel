@@ -7,45 +7,11 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>DHIS2 App - Analysis For Organisation Units</title>
-        <meta name="description" content="Imports Users and Organization Unit from CSV">
+        <meta name="description" content="Analysis For Organisation Units">
         
         <link rel="stylesheet" href="css/bootstrap.min.css">
-        <style>
-            body {
-                padding-top: 60px;
-                padding-bottom: 40px;
-            }
-            
-            #messageDiv{
-                color: red;
-            }
-            
-            #analysisDiv{
-                width: 100%;
-                
-                display: block;
-            }
-            
-            #analysisDiv svg {
-                min-height: 300px;
-            }
-            
-            .tick:not(.zero) {
-                opacity: 0;
-            }
-            
-            .message { padding:10px; margin:15px 0; display:block; text-align:left; }
-            .message-title { font-weight:bold; font-size:1.25em; }
-            .message-body { margin-top:4px; }
-            .error, .notice, .success {padding:.8em;margin-bottom:1em;border:2px solid #ddd;}
-            .error {background:#FBE3E4;color:#8a1f11;border-color:#FBC2C4;}
-            .notice {background:#FFF6BF;color:#514721;border-color:#FFD324;}
-            .success {background:#E6EFC2;color:#264409;border-color:#C6D880;}
-            .error a {color:#8a1f11;}
-            .notice a {color:#514721;}
-            .success a {color:#264409;} 
-        </style>
-
+        <link rel="stylesheet" href="css/main.css">
+        
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
         <script src="js/vendor/jquery-1.9.1.min.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
@@ -64,10 +30,6 @@
         <link rel="stylesheet" href="css/jquery.multiselect.css">
         <script src="js/vendor/jquery-ui.min.js"></script>
         <script src="js/libs/jquery.multiselect.min.js"></script>
-        <script>
-            
-            
-        </script>
         
         
     </head>
@@ -94,7 +56,7 @@
         <div class="container" style="width:98%;">
             <table border="0" cellspacing="10" cellpadding="5">
                     <tr>
-                        <td>Indicator:</td>
+                        <td id="indicatorsLbl" style="display: none;">Indicator:</td>
                         <td>
                             <select multiple id="indicators" style="display: none;">
                             </select>

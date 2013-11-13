@@ -4,9 +4,9 @@
     "description": "Charts, Maps and Tables Analysis",
     "launch_path": "/index.html",
     "icons": {
-        "16": "/img/icons/mortar-16.png",
-        "48": "/img/icons/mortar-48.png",
-        "128": "/img/icons/mortar-128.png"
+        "16": "/img/analysis_icon.png",
+        "48": "/img/analysis_icon.png",
+        "128": "/img/analysis_icon.png"
     },
     "developer": {
         "name": "Namrata Nehete Purkayastha",

@@ -108,6 +108,7 @@ function setData(metaDataType, dataStr) {
     else if (metaDataType == 'indicators')
     {
         indicatorsData = dataStr;
+        $("#indicatorsLbl").css("display", "block");
         setDataInDropdown(indicatorsData.indicators, metaDataType);
         showMultiSelectDropdown($("#indicators"),"Choose Indicators!", "You can select maximum four Indicators!");
         //console.log("indicators = "+indicatorsData.indicators.length);
