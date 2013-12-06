@@ -1,4 +1,4 @@
-function createHighChart(divName, titleText, data, xAxisCategories) {
+function createHighChart(divName, titleText, data, xAxisCategories, xAxisTitle, yAxisTitle) {
     divName.highcharts({
         credits: false,
         chart: {
@@ -29,14 +29,14 @@ function createHighChart(divName, titleText, data, xAxisCategories) {
                     }
                 },
                 title: {
-                    text: 'Data Elements',
+                    text: xAxisTitle,
                     style: {
                         color: '#4572A7'
                     }
                 }
             }, {// Secondary yAxis
                 title: {
-                    text: 'Indicators',
+                    text: yAxisTitle,
                     style: {
                         color: '#8bbc21'
                     }
@@ -72,7 +72,7 @@ function convertDHISJsonToChartJson(jsonData, dxParams) {
    // console.log('jsonData '+JSON.stringify(jsonData.rows));
    // console.log(JSON.stringify(dataElementData));
     $.each(dxParams, function(index, param) {
-        if ($('#indicators').val().indexOf(param.toString()) != -1)
+        if ($('#indicators').val() && $('#indicators').val().indexOf(param.toString()) != -1)
         {
             item = {};
             item ["name"] = jsonData.metaData.names[param];
@@ -132,8 +132,7 @@ function convertJsonToTableJson(jsonData, params){
     return data;
 }
 
-function getDataToDisplayInGraph(jsonData, id)
-{
+function getDataToDisplayInGraph(jsonData, id){
     var data = [];
     var periodData = [];
 
@@ -152,7 +151,7 @@ function getDataToDisplayInGraph(jsonData, id)
    return data;
 }
 
-function addCharts(data, ou, index, categories) {
+function addCharts(data, ou, index, categories,xAxisLabel, yAxisLabel) {
 
     var divData = '';
 
@@ -166,6 +165,6 @@ function addCharts(data, ou, index, categories) {
     $('#chart_' + index).append(divData);
     
     var divName = $('.chart_' + index);   
-    createHighChart(divName,ou.name,data,categories);
+    createHighChart(divName,ou.name,data,categories, xAxisLabel, yAxisLabel);
 }
 

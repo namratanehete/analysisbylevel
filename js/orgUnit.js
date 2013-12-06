@@ -43,8 +43,7 @@ function searchOrgUnitByParent(parentUid) {
     return orgUnitArr;
 }
 
-/**
- * 
+/** 
  * Get parent organisation unit by passing Id.
  * @param {String} uid
  */
@@ -66,6 +65,11 @@ function getParentOrgUnitById(uid) {
     return parentOu;
 }
 
+/**
+ * Go to children orgunit level hierachy
+ * @param {type} uid
+ * @returns doValidation()
+ */
 function goDown(uid) {
 
     displayOrgUnits = [];
@@ -73,6 +77,11 @@ function goDown(uid) {
     doValidation();
 }
 
+/**
+ * Go to parent orgunit level hierachy
+ * @param {type} uid
+ * @returns doValidation()
+ */
 function goUp(uid) {
 
     var parentOU = getParentOrgUnitById(uid);

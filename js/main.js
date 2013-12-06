@@ -12,7 +12,7 @@ var dataArr = [];
 var totalMetaDataTypes = 0;
 
 //@TODO select data elements
-//Select either Data Elements or Indicator
+//when Select either Data Elements or Indicator show correct axis names
 //Do validation
 $(document).ready(function() {
     loadManifest();
@@ -29,7 +29,7 @@ function loadManifest() {
         $('#btnExit').attr('href', serverUrl);
         getCurrentUser();
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        $.blockUI({message: 'Could not load manifest'});
+       // $.blockUI({message: 'Could not load manifest'});
     });
 }
 
@@ -108,8 +108,9 @@ function setData(metaDataType, dataStr) {
     else if (metaDataType == 'indicators')
     {
         indicatorsData = dataStr;
-        $("#indicatorsLbl").css("display", "block");
+        //$("#indicatorsLbl").css("display", "block");
         setDataInDropdown(indicatorsData.indicators, metaDataType);
+        //$("#indicatorsTd").css("display", "block");
         showMultiSelectDropdown($("#indicators"),"Choose Indicators!", "You can select maximum four Indicators!");
         //console.log("indicators = "+indicatorsData.indicators.length);
     }
@@ -125,6 +126,9 @@ function setData(metaDataType, dataStr) {
     }
 }
 
+/**
+ * Gets dat elemnets for selected dataElementGroup through ajax call
+ * On success sets dropbox wih data elements.*/
 function getDataElements() {
     if ($('#dataElementGroups :selected').val() != 'Select')
     {
@@ -162,6 +166,8 @@ function getDataElements() {
     }
 }
 
+/**
+ * Shows multi select drop down in page*/
 function showMultiSelectDropdown(className,header, warningMsg) {
 
     className.multiselect({
@@ -176,6 +182,11 @@ function showMultiSelectDropdown(className,header, warningMsg) {
     className.multiselect('refresh');
 }
 
+/**
+ * Shows warning messages
+ * @param {string} msg
+ * @param {string} timeoutSeconds
+ * */
 function showWarning(msg, timeoutSeconds) {
     var warning = $(".message");
     warning.css("display", "block");
@@ -188,6 +199,11 @@ function showWarning(msg, timeoutSeconds) {
     }, timeoutSeconds);
 }
 
+/**
+ * Sort json as per given property
+ * @param {type} data
+ * @param {type} prop
+ */
 function sortJson(data, prop) {
     return data.sort(function(a, b) {
         var x = a[prop];
@@ -214,6 +230,9 @@ function setDataInDropdown(data, dropdownName) {
     });
 }
 
+/**
+ * Check for validation for each required field in page.
+ */
 function doValidation() {
 
     var indicators = $('#indicators').val();
@@ -222,7 +241,7 @@ function doValidation() {
     var valid = true;
     if (!indicators && !dataElements)
     {
-        showWarning('Please Select Indicator and/or DataElements.', 2000);
+        showWarning('Please Select Indicators and/or DataElements.', 2000);
         valid = false;
     }
     else
@@ -233,11 +252,22 @@ function doValidation() {
             showWarning('Please Select Chart or Table Option.', 2000);
             valid = false;
         }
+        else if($("#thresholdChk:checked").val() == "on")
+        {
+            if (indicators && dataElements)
+            {
+                showWarning('Please Select either Indicators or DataElements.', 2000);
+                valid = false;
+            }
+        }
+        
     }
     if (valid)
     {
         var dxParams = [];
-
+        var peParams = [];
+        peParams.push(periodId);
+        
         if (dataElements)
         {
             $.each(dataElements, function() {
@@ -250,7 +280,8 @@ function doValidation() {
                 dxParams.push(this);
             });
         }
-        getDataFromDhis(dxParams, periodId);
+        
+        getDataFromDhis(dxParams, peParams);
     }
     else
     {
@@ -261,22 +292,28 @@ function doValidation() {
 /**
  * Get data for chart and table using DHIS web API.
  * */
-function getDataFromDhis(dxParams, periodId) {
+function getDataFromDhis(dxParams, peParams) {
     $('#analysisDiv').empty();
     chartArr = new Array();
     $.each(displayOrgUnits, function(ouIndex, ou) {
         createDivForChartAndTable(ouIndex);
 
         var dx = '';
+        var pe = '';
 
         $.each(dxParams, function(index, param) {
             dx += param;
             if (index != (dxParams.length - 1))
                 dx += ';';
         });
-
+        //&dimension=pe:2012Q1;2012Q2
+        $.each(peParams, function(index, param) {
+            pe += param;
+            if (index != (peParams.length - 1))
+                pe += ';';
+        });
         $.ajax({
-            url: serverUrl + '/api/analytics.json?dimension=dx:' + dx + '&dimension=pe:' + periodId + '&filter=ou:' + ou.id,
+            url: serverUrl + '/api/analytics.json?dimension=dx:' + dx + '&dimension=pe:' + pe + '&filter=ou:' + ou.id,
             headers: {
                 'Accept': 'application/json'
             },
@@ -290,7 +327,7 @@ function getDataFromDhis(dxParams, periodId) {
             if (jqXHR.getResponseHeader('Login-Page') == 'true') {
                 $.blockUI({message: $('#unauthenticatedMessage')});
             } else {
-                createChartAndTable(data, dxParams, ou, ouIndex);
+                createChartAndTable(data, dxParams, ou, ouIndex,'Data Elements','Indicators');
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             $.blockUI({message: $('#failureMessage')});
@@ -298,6 +335,9 @@ function getDataFromDhis(dxParams, periodId) {
     });
 }
 
+/**
+ * Get data for chart and table using DHIS web API.
+ * */
 function createDivForChartAndTable(ouIndex) {
     var divData = '<div id="div_' + ouIndex + '" style="float:left;display:inline-block;">';
     $("input[name=analysisType]:checked").each(function() {
@@ -312,7 +352,16 @@ function createDivForChartAndTable(ouIndex) {
     $('#analysisDiv').append(divData);
 }
 
-function createChartAndTable(jsonData, dxParams, ou, ouIndex) {
+/**
+ * calls addcharts or draw table method depend on selection
+ * @param {type} jsonData
+ * @param {type} dxParams: dimension params
+ * @param {type} ou
+ * @param {type} ouIndex
+ * @param {type} xAxisLabel
+ * @param {type} yAxisLabel
+ */
+function createChartAndTable(jsonData, dxParams, ou, ouIndex, xAxisLabel, yAxisLabel) {
     if (jsonData)
     {
         var data = convertDHISJsonToChartJson(jsonData, dxParams);
@@ -320,28 +369,34 @@ function createChartAndTable(jsonData, dxParams, ou, ouIndex) {
         var categories = getXAxisCategories(jsonData);
         $("input[name=analysisType]:checked").each(function() {
             if ($(this).val() == 'Chart') {
-                addCharts(data, ou, ouIndex, categories);
+                addCharts(data, ou, ouIndex, categories, xAxisLabel, yAxisLabel);
             }
             if ($(this).val() == 'Table') {
                 var tableData = convertJsonToTableJson(jsonData, dxParams);
-                drawTable(tableData, ou, ouIndex, categories);
+                drawTable(tableData, ou, ouIndex);
             }
         });
     }
 }
 
-
-function drawTable(data, ou, index, categories) {
+/**
+ * creates table as per data in page. 
+ * @param {type} data
+ * @param {type} ou
+ * @param {type} index
+ * @param {type} categories
+ */
+function drawTable(data, ou, index) {
 
     var totalTds = data[0].keys.length + 1;
-    var table = '<table border="1" style="margin:5px;font: 11px sans-serif;">';
+    var table = '<table border="1" style="font: 11px sans-serif;">';
     table += '<tr><td style="text-align:center;font-weight: bold;" colspan="'+totalTds+'">' + ou.name + '</td></tr>';
     table += '<tr><td style="text-align:center;">';
     if (displayOrgUnits.length > 1)
-        table += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
+        table += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/move_up.png"></a>';
 
     if (searchOrgUnitByParent(ou.id).length > 0)
-        table += '<a href=# onclick="goDown(\'' + ou.id + '\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a></div>';
+        table += '<a href=# onclick="goDown(\'' + ou.id + '\')" style="padding-left:5px;"><img border="0" width="16" heigth="16" title="down" src="./img/move_down.png"></a></div>';
 
     table += '</td>';
     $.each(data[0].keys, function() {

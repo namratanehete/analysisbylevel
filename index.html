@@ -8,10 +8,10 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>DHIS2 App - Analysis For Organisation Units</title>
         <meta name="description" content="Analysis For Organisation Units">
-        
+
         <link rel="stylesheet" href="css/bootstrap.min.css">
         <link rel="stylesheet" href="css/main.css">
-        
+
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
         <script src="js/vendor/jquery-1.9.1.min.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
@@ -25,16 +25,15 @@
         <script src="js/orgUnit.js"></script>
         <script src="js/vendor/highcharts/highcharts.js"></script>
         <script src="js/vendor/highcharts/exporting.js"></script>
-        
+
         <link rel="stylesheet" href="css/jquery-ui.css">
         <link rel="stylesheet" href="css/jquery.multiselect.css">
         <script src="js/vendor/jquery-ui.min.js"></script>
         <script src="js/libs/jquery.multiselect.min.js"></script>
-        
-        
+
     </head>
     <body>
-         <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
                     <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -55,61 +54,72 @@
 
         <div class="container" style="width:98%;">
             <table border="0" cellspacing="10" cellpadding="5">
-                    <tr>
-                        <td id="indicatorsLbl" style="display: none;">Indicator:</td>
-                        <td>
-                            <select multiple id="indicators" style="display: none;">
-                            </select>
-                        </td>
-                        <td>DataElement Group:</td>
-                        <td>
-                            <select id="dataElementGroups" onchange="getDataElements()">
-                                <option value="Select">Select</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select multiple id="dataElements" style="display: none;">
-                            </select>
-                        </td>
-                        <td>Period:</td>
-                        <td>
-                            <select id="periods">
-                                <option value="LAST_WEEK">Last week</option>
-                                <option value="LAST_4_WEEKS">Last 4 weeks</option>
-                                <option value="LAST_12_WEEKS">Last 12 weeks</option>
-                                <option value="LAST_MONTH">Last month</option>
-                                <option value="LAST_3_MONTHS">Last 3 months</option>
-                                <option value="LAST_12_MONTHS">Last 12 months</option>
-                                <option value="LAST_BIMONTH">Last bi-month</option>
-                                <option value="LAST_6_BIMONTHS">Last 6 bi-months</option>
-                                <option value="LAST_QUARTER">Last quarter</option>
-                                <option value="LAST_4_QUARTERS">Last 4 quarters</option>
-                                <option value="LAST_SIX_MONTH">Last six-month</option>
-                                <option value="LAST_2_SIXMONTHS">Last 2 six-months</option>
-                                <option value="LAST_FINANCIAL_YEAR">Last financial year</option>
-                                <option value="LAST_5_FINANCIAL_YEARS">Last 5 financial years</option>
-                                <option value="THIS_YEAR">This year</option>
-                                <option value="LAST_YEAR">Last year</option>
-                                <option value="LAST_5_YEARS">Last 5 years</option>
-                            </select>
-                        </td>
-                        <td>Chart <input type="checkbox" name="analysisType" checked value="Chart"/></td>
-                        <td>Table <input type="checkbox" name="analysisType" value="Table" /></td>
-                        <td><input type="button" onclick="doValidation()" value="Show Analysis"/></td>
-                    </tr>
-             </table>
-             <hr>
-             <p style="display:none;" class="message"></p>
-             <div id="analysisDiv">
-                 
-             </div>            
+                <tr>
+                    <td>Indicator:</td>
+                    <td>
+                        <select multiple="" id="indicators" style="height: 30px; margin-top: 10px;">
+                        </select>
+                    </td>
+                    <td>DataElement Group:</td>
+                    <td>
+                        <select id="dataElementGroups" onchange="getDataElements()">
+                            <option value="Select">Select</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select multiple id="dataElements" style="display: none;">
+                        </select>
+                    </td>
+                    <td>Period:</td>
+                    <td>
+                        <select id="periods">
+                            <option value="LAST_WEEK">Last week</option>
+                            <option value="LAST_4_WEEKS">Last 4 weeks</option>
+                            <option value="LAST_12_WEEKS">Last 12 weeks</option>
+                            <option value="LAST_MONTH">Last month</option>
+                            <option value="LAST_3_MONTHS">Last 3 months</option>
+                            <option value="LAST_12_MONTHS">Last 12 months</option>
+                            <option value="LAST_BIMONTH">Last bi-month</option>
+                            <option value="LAST_6_BIMONTHS">Last 6 bi-months</option>
+                            <option value="LAST_QUARTER">Last quarter</option>
+                            <option value="LAST_4_QUARTERS">Last 4 quarters</option>
+                            <option value="LAST_SIX_MONTH">Last six-month</option>
+                            <option value="LAST_2_SIXMONTHS">Last 2 six-months</option>
+                            <option value="LAST_FINANCIAL_YEAR">Last financial year</option>
+                            <option value="LAST_5_FINANCIAL_YEARS">Last 5 financial years</option>
+                            <option value="THIS_YEAR">This year</option>
+                            <option value="LAST_YEAR">Last year</option>
+                            <option value="LAST_5_YEARS">Last 5 years</option>
+                        </select>
+                    </td>
+                    <td>
+                        <table>
+                            <tr align="right">
+                                <td>Chart <input type="checkbox" name="analysisType" checked value="Chart"/>
+                                    Table <input type="checkbox" name="analysisType" value="Table" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Show Threshold Value<input type="checkbox" id="thresholdChk" name="thresholdChk" value="Threshold"/></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td><input type="button" onclick="doValidation()" value="Show Analysis"/></td>
+                </tr>
+
+            </table>
+            <hr>
+            <p style="display:none;" class="message"></p>
+            <div id="analysisDiv">
+
+            </div>            
             <br/>
         </div> <!-- /container -->
-        
+
         <footer>
-            <p>&copy; Namrata Nehete Purkayastha, 2013</p>
+            <p style="color: white">&copy; Namrata Nehete Purkayastha, 2013</p>
         </footer>
-        
+
         <div id="unauthenticatedMessage" style="display:none;"> 
             <h1>Unathenticated access. Please login to DHIS2.</h1> 
         </div> 
