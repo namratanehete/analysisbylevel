@@ -2,7 +2,8 @@ function createHighChart(divName, titleText, data, xAxisCategories, xAxisTitle, 
     divName.highcharts({
         credits: false,
         chart: {
-            marginBottom:150
+            marginBottom:150,
+            rotation: -90,
         },
         title: {
             text: titleText
@@ -62,7 +63,7 @@ function getXAxisCategories(jsonData){
     $.each(jsonData.metaData.pe, function(peIndex, peObj) {
             categories[peIndex] = jsonData.metaData.names[peObj];
     });
-    console.log(categories);
+    //console.log(categories);
     return categories;
 }
 
@@ -94,10 +95,47 @@ function convertDHISJsonToChartJson(jsonData, dxParams) {
     return data;
 }
 
+function convertDHISJsonWithThresholdToChartJson(jsonData, dxParams) {
+    var data = [];
+    jsonData.metaData.pe.sort();
+   // console.log('jsonData '+JSON.stringify(jsonData.rows));
+   // console.log(JSON.stringify(dataElementData));
+    $.each(dxParams, function(index, param) {
+        if ($('#indicators').val() && $('#indicators').val().indexOf(param.toString()) != -1)
+        {
+            item = {};
+            item ["name"] = jsonData.metaData.names[param];
+            item ["type"] = 'column';
+            item ["data"] = getDataToDisplayInGraph(jsonData, param);
+            data.push(item);
+        }
+        else if($('#dataElements').val() && $('#dataElements').val().indexOf(param.toString()) != -1)
+        {
+            item = {};
+            item ["name"] = jsonData.metaData.names[param];
+            item ["type"] = 'column';
+            item ["data"] = getDataToDisplayInGraph(jsonData, param);
+            data.push(item);
+        }
+        else
+        {
+            item = {};
+            item ["name"] = jsonData.metaData.names[param];
+            item ["type"] = 'spline';
+            item ["dashStyle"] = 'shortdot';
+            item ["data"] = getDataToDisplayInGraph(jsonData, param);
+            data.push(item);
+        }
+    });
+    
+    console.log('data '+JSON.stringify(data));
+    return data;
+}
+
 function convertJsonToTableJson(jsonData, params){
     jsonData.metaData.pe.sort();
     var data = [];
-    console.log('jsonData '+JSON.stringify(jsonData.rows));
+    //console.log('jsonData '+JSON.stringify(jsonData.rows));
     $.each(jsonData.metaData.pe, function(peIndex, peObj) {
         item = {};
         item ["period"] = jsonData.metaData.names[peObj];
@@ -132,12 +170,12 @@ function convertJsonToTableJson(jsonData, params){
     return data;
 }
 
-function getDataToDisplayInGraph(jsonData, id){
+function getDataToDisplayInGraph(jsonData, deId){
     var data = [];
     var periodData = [];
 
         $.each(jsonData.rows, function(rowIndex, rowObj) {
-            if(rowObj[0]== id)
+            if(rowObj[0]== deId)
                 periodData[rowIndex] = rowObj[1];
         });
         
@@ -149,6 +187,17 @@ function getDataToDisplayInGraph(jsonData, id){
                 data.push(parseFloat(jsonData.rows[index][2]));
         });
    return data;
+}
+
+function getDataByPeriodForParam(jsonData, deId, periodId){
+    var data = 0.0;
+
+    $.each(jsonData.rows, function(rowIndex, rowObj) {
+        if(rowObj[0]== deId && rowObj[1] == periodId)
+            data = parseFloat(rowObj[2]);
+    });
+    
+    return data;
 }
 
 function addCharts(data, ou, index, categories,xAxisLabel, yAxisLabel) {

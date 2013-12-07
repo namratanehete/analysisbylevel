@@ -5,7 +5,6 @@ var orgUnitData = new Array();
 var dataElementGroupData = new Array();
 var dataElementData = new Array();
 var indicatorsData = new Array();
-var chartArr = new Array();
 var parentUserOrgId;
 var displayOrgUnits = [];
 var dataArr = [];
@@ -246,17 +245,16 @@ function doValidation() {
     }
     else
     {
-        console.log($("input[name=analysisType]:checked").length);
         if ($("input[name=analysisType]:checked").length == 0)
         {
             showWarning('Please Select Chart or Table Option.', 2000);
             valid = false;
         }
-        else if($("#thresholdChk:checked").val() == "on")
+        if($("#thresholdChk").is(":checked"))
         {
             if (indicators && dataElements)
             {
-                showWarning('Please Select either Indicators or DataElements.', 2000);
+                showWarning('Please Select either Indicators or DataElements for threshold value.', 2000);
                 valid = false;
             }
         }
@@ -294,13 +292,11 @@ function doValidation() {
  * */
 function getDataFromDhis(dxParams, peParams) {
     $('#analysisDiv').empty();
-    chartArr = new Array();
     $.each(displayOrgUnits, function(ouIndex, ou) {
         createDivForChartAndTable(ouIndex);
 
         var dx = '';
         var pe = '';
-
         $.each(dxParams, function(index, param) {
             dx += param;
             if (index != (dxParams.length - 1))
@@ -327,7 +323,11 @@ function getDataFromDhis(dxParams, peParams) {
             if (jqXHR.getResponseHeader('Login-Page') == 'true') {
                 $.blockUI({message: $('#unauthenticatedMessage')});
             } else {
-                createChartAndTable(data, dxParams, ou, ouIndex,'Data Elements','Indicators');
+                if($("#thresholdChk").is(":checked")){
+                    getDataForThreshold(dxParams,data, 3, ou, ouIndex);
+                }
+                else
+                    createChartAndTable(data, dxParams, ou, ouIndex);  
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             $.blockUI({message: $('#failureMessage')});
@@ -335,6 +335,53 @@ function getDataFromDhis(dxParams, peParams) {
     });
 }
 
+/**
+ * Get data for chart and table using DHIS web API.
+ * */
+function getDataForThreshold(dxParams, mainData, years, ou, ouIndex) {
+
+    $.each(displayOrgUnits, function(ouIndex, ou) {
+        
+        var dx = '';
+        var pe = '';
+        $.each(dxParams, function(index, param) {
+            dx += param;
+            if (index != (dxParams.length - 1))
+                dx += ';';
+        });
+        //getting data for past years
+        $.each(mainData.metaData.pe, function(index, param) {
+            var yearStr = param.substring(0,4);
+            for(var y=0; y<years; y++) {
+                yearStr--;
+                pe += yearStr + param.substring(4) + ';';
+            }
+        });
+        console.log(pe);
+        $.ajax({
+            url: serverUrl + '/api/analytics.json?dimension=dx:' + dx + '&dimension=pe:' + pe + '&filter=ou:' + ou.id,
+            headers: {
+                'Accept': 'application/json'
+            },
+            type: "GET",
+            cache: false,
+            crossDomain: true,
+            xhrFields: {
+                withCredentials: true
+            }
+        }).done(function(data, textStatus, jqXHR) {
+            if (jqXHR.getResponseHeader('Login-Page') == 'true') {
+                $.blockUI({message: $('#unauthenticatedMessage')});
+            } else {
+                calculateThresholdValue(data, dxParams, mainData, ou, ouIndex);
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            $.blockUI({message: $('#failureMessage')});
+        });
+    });
+}
+
+//2013W48, "201311", 201311B, 2013Q4,2013S2, 2012July, 2009
 /**
  * Get data for chart and table using DHIS web API.
  * */
@@ -352,6 +399,47 @@ function createDivForChartAndTable(ouIndex) {
     $('#analysisDiv').append(divData);
 }
 
+function calculateThresholdValue(thresholdData, dxParams, mainData, ou, ouIndex){
+    thresholdData.metaData.pe.sort();
+    mainData.metaData.pe.sort();
+
+    $.each(dxParams, function(index, param) {
+        var deId = param+'Threshold';
+        mainData.metaData.names[deId] = mainData.metaData.names[param] + ' Threshold';
+        dxParams.push(deId);
+        $.each(mainData.metaData.pe, function (peInd, selectedPeriod){
+            var periodOtherThanYear = selectedPeriod.substring(4);
+            var thresholdDataTotal = 0;
+            var averageDenom = 0;
+            $.each(thresholdData.metaData.pe, function(periodInd, period) {
+                if(period.substring(4).indexOf(periodOtherThanYear) != -1)
+                {   
+                    var data = getDataByPeriodForParam(thresholdData, param, period);
+                    if(data != 0 )
+                        averageDenom++;
+                    
+                    thresholdDataTotal += data;
+                   // console.log("param " +param + "selectedPeriod = " + periodOtherThanYear +" period "+period + " data "+data);
+                }
+            });
+            //console.log("thresholdDataTotal " +thresholdDataTotal + "averageDenom = " + averageDenom );
+            if(thresholdDataTotal != 0 && averageDenom != 0)
+                thresholdDataTotal = (thresholdDataTotal/averageDenom)*1.5;
+            
+            item = [];
+            item.push(deId);
+            item.push(selectedPeriod);
+            item.push(thresholdDataTotal);
+            
+            mainData.rows.push(item);
+            //console.log("final data " +thresholdDataTotal + " averageDenom = " + averageDenom );
+        });
+    });
+    console.log(mainData);
+    createChartAndTable(mainData, dxParams, ou, ouIndex);  
+    //console.log("chartData = "+JSON.stringify(chartData));
+}
+
 /**
  * calls addcharts or draw table method depend on selection
  * @param {type} jsonData
@@ -361,15 +449,27 @@ function createDivForChartAndTable(ouIndex) {
  * @param {type} xAxisLabel
  * @param {type} yAxisLabel
  */
-function createChartAndTable(jsonData, dxParams, ou, ouIndex, xAxisLabel, yAxisLabel) {
+function createChartAndTable(jsonData, dxParams, ou, ouIndex ) {
     if (jsonData)
     {
-        var data = convertDHISJsonToChartJson(jsonData, dxParams);
-        dataArr[ouIndex] = data;
         var categories = getXAxisCategories(jsonData);
         $("input[name=analysisType]:checked").each(function() {
             if ($(this).val() == 'Chart') {
-                addCharts(data, ou, ouIndex, categories, xAxisLabel, yAxisLabel);
+                var xAxisLabel;
+                var yAxisLabel;
+                var chartData = [];
+                if($("#thresholdChk").is(":checked")){
+                    xAxisLabel = $('#dataElements').val() ? 'Data Elements' : $('#indicators').val() ? 'Indicators' : '';
+                    yAxisLabel = 'Threshold';
+                    chartData = convertDHISJsonWithThresholdToChartJson(jsonData, dxParams);
+                }   
+                else {
+                    xAxisLabel = $('#dataElements').val() ? 'Data Elements' : '';
+                    yAxisLabel = $('#indicators').val() ? 'Indicators' : '';
+                    chartData = convertDHISJsonToChartJson(jsonData, dxParams);
+                }
+                dataArr[ouIndex] = chartData;
+                addCharts(chartData, ou, ouIndex, categories, xAxisLabel, yAxisLabel);
             }
             if ($(this).val() == 'Table') {
                 var tableData = convertJsonToTableJson(jsonData, dxParams);
@@ -415,4 +515,3 @@ function drawTable(data, ou, index) {
     table += '</table>';
     $('#table_' + index).append(table);
 }
-
