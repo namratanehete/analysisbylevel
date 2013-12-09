@@ -128,7 +128,7 @@ function convertDHISJsonWithThresholdToChartJson(jsonData, dxParams) {
         }
     });
     
-    console.log('data '+JSON.stringify(data));
+    //console.log('data '+JSON.stringify(data));
     return data;
 }
 
@@ -205,10 +205,10 @@ function addCharts(data, ou, index, categories,xAxisLabel, yAxisLabel) {
     var divData = '';
 
     if (displayOrgUnits.length > 1)
-        divData += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/up.png"></a>';
+        divData += '<a href=# onclick="goUp(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/move_up.png"></a>';
 
     if (searchOrgUnitByParent(ou.id).length > 0)
-        divData += '<a href=# onclick="goDown(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/down.png"></a>';
+        divData += '<a href=# onclick="goDown(\'' + ou.id + '\')"><img border="0" width="16" heigth="16" title="↑" src="./img/move_down.png"></a>';
     
     divData += '<div class="chart_' + index+'"></div>';
     $('#chart_' + index).append(divData);

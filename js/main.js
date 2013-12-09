@@ -10,9 +10,9 @@ var displayOrgUnits = [];
 var dataArr = [];
 var totalMetaDataTypes = 0;
 
-//@TODO select data elements
-//when Select either Data Elements or Indicator show correct axis names
-//Do validation
+//@TODO implement browser caching
+//@TODO implement NVd3
+//
 $(document).ready(function() {
     loadManifest();
 });
@@ -302,6 +302,7 @@ function getDataFromDhis(dxParams, peParams) {
             if (index != (dxParams.length - 1))
                 dx += ';';
         });
+        //console.log("de "+dx);
         //&dimension=pe:2012Q1;2012Q2
         $.each(peParams, function(index, param) {
             pe += param;
@@ -324,7 +325,7 @@ function getDataFromDhis(dxParams, peParams) {
                 $.blockUI({message: $('#unauthenticatedMessage')});
             } else {
                 if($("#thresholdChk").is(":checked")){
-                    getDataForThreshold(dxParams,data, 3, ou, ouIndex);
+                    getDataForThreshold(dxParams, data, 3, ou, ouIndex);
                 }
                 else
                     createChartAndTable(data, dxParams, ou, ouIndex);  
@@ -339,9 +340,6 @@ function getDataFromDhis(dxParams, peParams) {
  * Get data for chart and table using DHIS web API.
  * */
 function getDataForThreshold(dxParams, mainData, years, ou, ouIndex) {
-
-    $.each(displayOrgUnits, function(ouIndex, ou) {
-        
         var dx = '';
         var pe = '';
         $.each(dxParams, function(index, param) {
@@ -349,12 +347,15 @@ function getDataForThreshold(dxParams, mainData, years, ou, ouIndex) {
             if (index != (dxParams.length - 1))
                 dx += ';';
         });
+        //console.log("--------- Inside getDataForThreshold with params "+dx + " ou "+ou.name);
         //getting data for past years
         $.each(mainData.metaData.pe, function(index, param) {
             var yearStr = param.substring(0,4);
             for(var y=0; y<years; y++) {
                 yearStr--;
-                pe += yearStr + param.substring(4) + ';';
+                var period = yearStr + param.substring(4);
+                if(pe.indexOf(period) == -1)
+                    pe += period + ';';
             }
         });
         console.log(pe);
@@ -373,12 +374,12 @@ function getDataForThreshold(dxParams, mainData, years, ou, ouIndex) {
             if (jqXHR.getResponseHeader('Login-Page') == 'true') {
                 $.blockUI({message: $('#unauthenticatedMessage')});
             } else {
-                calculateThresholdValue(data, dxParams, mainData, ou, ouIndex);
+                
+                calculateThresholdValue(data, dxParams, mainData, ou, ouIndex, years);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             $.blockUI({message: $('#failureMessage')});
         });
-    });
 }
 
 //2013W48, "201311", 201311B, 2013Q4,2013S2, 2012July, 2009
@@ -392,42 +393,56 @@ function createDivForChartAndTable(ouIndex) {
             divData += '<div id="chart_' + ouIndex + '" style="border:1px solid;float:left;display:inline-block;width:650px;margin:5px;"></div>';
         }
         if ($(this).val() == 'Table') {
-            divData += '<div id="table_' + ouIndex + '" style="float:left;display:inline-block;"></div>';
+            divData += '<div id="table_' + ouIndex + '" style="float:left;display:inline-block;margin:5px;"></div>';
         }
     });
     divData += '</div>';
     $('#analysisDiv').append(divData);
 }
 
-function calculateThresholdValue(thresholdData, dxParams, mainData, ou, ouIndex){
+function calculateThresholdValue(thresholdData, dxParams, mainData, ou, ouIndex, years){
     thresholdData.metaData.pe.sort();
     mainData.metaData.pe.sort();
-
+    //console.log("--------- Inside calculateThresholdValue with params "+dxParams + " ou "+ou.name);
+    var params = [];
     $.each(dxParams, function(index, param) {
-        var deId = param+'Threshold';
-        mainData.metaData.names[deId] = mainData.metaData.names[param] + ' Threshold';
-        dxParams.push(deId);
+        params.push(param);
+        var thresholdParamId = param+'Threshold';
+        params.push(thresholdParamId);
+        mainData.metaData.names[thresholdParamId] = mainData.metaData.names[param] + ' Threshold';
+        // maindata contains actual period params in chart or table
         $.each(mainData.metaData.pe, function (peInd, selectedPeriod){
+            var yearStr = selectedPeriod.substring(0,4);
             var periodOtherThanYear = selectedPeriod.substring(4);
+            //console.log('selectedPeriod '+selectedPeriod + " yearStr "+yearStr+  " periodOtherThanYear "+periodOtherThanYear);
             var thresholdDataTotal = 0;
             var averageDenom = 0;
+            //thresholdData contains threshold data that is data for past periods 
             $.each(thresholdData.metaData.pe, function(periodInd, period) {
-                if(period.substring(4).indexOf(periodOtherThanYear) != -1)
-                {   
-                    var data = getDataByPeriodForParam(thresholdData, param, period);
-                    if(data != 0 )
-                        averageDenom++;
+                //Checking if period is previous year
+                if(period.indexOf(yearStr-1) != -1)
+                {
+                    // adding loop for past selected years.. right now it is 3 years.
+                    for(var y=0; y<years; y++) {
+                        yearStr--;
+                        var data = getDataByPeriodForParam(thresholdData, param, yearStr+periodOtherThanYear);
+                        //if data is non zero then only denominator should increase by one for calculating average.
+                        if(data != 0 )
+                            averageDenom++;
                     
-                    thresholdDataTotal += data;
-                   // console.log("param " +param + "selectedPeriod = " + periodOtherThanYear +" period "+period + " data "+data);
+                        thresholdDataTotal += data;
+                        console.log("param " +param + " period "+periodParam + " data "+data + " ou "+ou.name);
+                    }
                 }
+                    
             });
             //console.log("thresholdDataTotal " +thresholdDataTotal + "averageDenom = " + averageDenom );
             if(thresholdDataTotal != 0 && averageDenom != 0)
-                thresholdDataTotal = (thresholdDataTotal/averageDenom)*1.5;
+                thresholdDataTotal = ((thresholdDataTotal/averageDenom)*1.5).toFixed(2);
             
+            // pushing threshold data in mainData to diplay threshold data in chart or table
             item = [];
-            item.push(deId);
+            item.push(thresholdParamId);
             item.push(selectedPeriod);
             item.push(thresholdDataTotal);
             
@@ -435,8 +450,7 @@ function calculateThresholdValue(thresholdData, dxParams, mainData, ou, ouIndex)
             //console.log("final data " +thresholdDataTotal + " averageDenom = " + averageDenom );
         });
     });
-    console.log(mainData);
-    createChartAndTable(mainData, dxParams, ou, ouIndex);  
+    createChartAndTable(mainData, params, ou, ouIndex);  
     //console.log("chartData = "+JSON.stringify(chartData));
 }
 
