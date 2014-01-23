@@ -431,7 +431,7 @@ function calculateThresholdValue(thresholdData, dxParams, mainData, ou, ouIndex,
                             averageDenom++;
                     
                         thresholdDataTotal += data;
-                        console.log("param " +param + " period "+periodParam + " data "+data + " ou "+ou.name);
+                        //console.log("param " +param + " period "+yearStr+periodOtherThanYear + " data "+data + " ou "+ou.name);
                     }
                 }
                     
@@ -514,7 +514,7 @@ function drawTable(data, ou, index) {
 
     table += '</td>';
     $.each(data[0].keys, function() {
-        table += '<td>' + this + '</td>';
+        table += '<td style="max-width: 100px; vertical-align: top; padding:2px;">' + this + '</td>';
     });
 
     table += '</tr>';
